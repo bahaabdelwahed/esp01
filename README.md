@@ -1,9 +1,8 @@
 ESP 01 LIBRARY FOR STM32
 tested with stm32f429i
-![436616820_447156724575612_4290058625769224074_n](https://github.com/bahaabdelwahed/esp01/assets/19738278/87b24156-d460-4bad-b3cb-f8a4c1ee8772)
-
 USART1 => For Debugging
 UART7 => ESP01
+
 ESP01 STM32
 RX    PF7
 TX    PF6
