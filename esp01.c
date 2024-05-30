@@ -10,11 +10,7 @@ void MX_USART1_UART_Init(void) {
   /* Enable USART clock */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 	    NVIC_InitTypeDef NVIC_InitStructure;
-
-  /* Configure USART pins (refer to your board's datasheet for pin mapping) */
   GPIO_InitTypeDef GPIO_InitStructure;
-print("aaa");
-  /* Assuming PA9 (TX) and PA10 (RX) are used for USART1 */
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_10;
@@ -44,9 +40,7 @@ print("aaa");
 
   /* Adjust USART configuration for oversampling effect (if baud rate is below 3600) */
     /* Option 1: Increase baud rate and adjust USARTDIV for oversampling by 8 */
-    USART_InitStructure.USART_BaudRate = baud_rate ;  // Double the baud rate
-      // Adjust USARTDIV for doubled baud rate
-  
+    USART_InitStructure.USART_BaudRate = baud_rate ;  // Double the baud rate  
 	
   USART_InitStructure.USART_WordLength = USART_WordLength_8b;
   USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -74,18 +68,14 @@ void MX_USART7_UART_Init(void) {
 
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    /* Configure USART pins */
     GPIO_InitTypeDef GPIO_InitStructure;
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
     NVIC_SetPriorityGrouping(7);
-
-    // Enable the USART7 IRQ channel in the NVIC
     NVIC_InitStructure.NVIC_IRQChannel = UART7_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
-    /* Configure USART7 TX (PF6) and RX (PF7) pins */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
@@ -206,9 +196,7 @@ usartSendArrar(UART7,(uint8_t *)cmd);
 
 }
 
- // Adjust based on expected message size
-char at_command[] = "AT\r\n";  // Replace with your desired AT command
- // Adjust size based on expected response length
+
 uint8_t rx_len;
 
 uint8_t USART_ReceiveDataa(USART_TypeDef* USARTx) {
@@ -220,8 +208,6 @@ void USART_SendDataa(USART_TypeDef* USARTx, uint8_t data) {
   while (!(USARTx->SR & USART_SR_TXE));  // Wait for transmit empty flag
   USARTx->DR = data;
 }
-#define BUFFER_SIZE 100 // Adjust buffer size as needed
-
 
 
 volatile char received_data;
@@ -237,14 +223,6 @@ void UART7_IRQHandler(void) {
   //  while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET); // Wait for USART1 transmit buffer empty
    USART_SendData(USART1, (uint8_t)received_data);
 		  recived_d[strlen(recived_d)]=received_data;
-     
-	
-	
-	
-	
-
-			// Send the received data
-   // strcat(recived_d, received_data);
     USART_ClearITPendingBit(UART7, USART_IT_RXNE);
   
 }
@@ -265,9 +243,33 @@ void list_wifi(){
 send_COMMANDE("AT+CWLAP\r\n");
 }
 
-void send_data_to_server(char data[50]){
+void send_data_to_server(char data[50],char *size_data){
+	char rs1[500];
+	sprintf(rs1,"AT+CIPSEND=1,%s\r\n",size_data);
+	
 send_COMMANDE("AT+CIPMUX=1\r\n");
 send_COMMANDE("AT+CIPSERVER=1,80\r\n");
+				usartSendArrar(USART1,(uint8_t *)"Waiting");
+	while(1){
+			while(strstr(recived_d,"+IPD") == NULL){
+			
+			usartSendArrar(USART1,(uint8_t *)".");
+			DelayTimerUs(800);
+
+			}
+			      memset(recived_d,0,sizeof(recived_d));       
+						DelayTimerUs(1000);
+						send_COMMANDE(rs1);
+
+      			while(strstr(recived_d,">") == NULL);
+
+			   
+				send_COMMANDE(data);
+			  send_COMMANDE("AT+CIPCLOSE=1\r\n");
+
+
+	memset(recived_d,0,sizeof(recived_d));
+		}
 
 }
 void request_site(char site[20], char port[4],char methode[50],char path[20],char POST_DATA[500])
@@ -306,36 +308,4 @@ while (i==0){
 		}
 	}
 	}
-int main(void) {
-	//__disable_irq();
 
-
- //SystemInit();
-	configure_timer_delay();
-	MX_USART7_UART_Init();
-  MX_USART1_UART_Init();
-	//NVIC_EnableIRQ(UART7_IRQn);
-//  USART_ITConfig(UART7, USART_IT_RXNE, ENABLE);
-		//	NVIC_EnableIRQ(UART7_IRQn);
-			//	NVIC_EnableIRQ(USART1_IRQn);
-				NVIC_EnableIRQ(UART7_IRQn);
-
-
-	int i = 0;
-		// __disable_irq();
-				 	
-request_site("eoj8egugniz88bu.m.pipedream.net","80","GET","","PASSWORD=552");
-	//usartSendArrar(UART7,(uint8_t *)"AT\r\n");
-	//wifi_connect();
-	//send_data_to_server("a");
-
- //  __enable_irq();
-
-  while (1){
-		usartSendArrar(USART1,(uint8_t *)recived_d);
-//usartSendArrar(USART1,(uint8_t *)recived_d);
-		
-
-
-	};  // Infinite loop (optional)
-}
